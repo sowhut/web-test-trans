@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Web Test Trans · 自动化录制台</title><link rel="stylesheet" href="/static/style.css"></head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/"><span class="brand-icon">w<span>↗</span></span><div>Web Test Trans<small>AUTOMATION STUDIO</small></div></a>
+    <div class="space-label">工作空间 <span>LOCAL</span></div>
+    <button class="nav-item selected" id="nav-record"><span>◉</span> 录制工作台</button>
+    <button class="nav-item" id="nav-components"><span>▦</span> 组件定位库 <b id="nav-count">0</b></button>
+    <div class="history-title">最近的录制 <button id="new-session" title="新建录制">＋</button></div>
+    <div id="history" class="history"></div>
+    <div class="sidebar-bottom"><span class="green-dot"></span> 本地运行 · 数据保存在本机<small id="system">正在连接服务…</small></div>
+  </aside>
+  <main>
+    <header class="topbar"><div>工作空间 <span>/</span> 录制工作台</div><span class="version">BASIC · v0.1</span></header>
+    <div class="workspace">
+      <div class="page-heading"><div><div class="eyebrow">RECORD. REUSE. REPLAY.</div><h1>把操作，变成可复用的测试。</h1><p>录下真实操作，自动生成组件代码与 Toast 断言。</p></div><a class="link-button" href="/docs" target="_blank">API 文档 ↗</a></div>
+      <div class="layout">
+        <section class="panel setup">
+          <div class="panel-title"><h2>新建录制</h2><span class="step">01 / 配置</span></div>
+          <form id="start-form">
+            <div class="mode-switch"><label><input type="radio" name="backend" value="web" checked><span>◫ 网页浏览器</span></label><label><input type="radio" name="backend" value="windows"><span>⊞ Windows 原生</span></label></div>
+            <label class="field">录制名称<input id="session-name" placeholder="例如：登录与保存流程" maxlength="100" value="我的第一次录制" required></label>
+            <div id="web-fields"><label class="field">目标页面 URL<input id="target-url" type="url" placeholder="https://example.com"></label><button type="button" class="text-button" id="use-demo">使用内置演示页面 ↗</button></div>
+            <div id="windows-fields" hidden><label class="field">目标程序 PID<input id="process-id" type="number" min="1" placeholder="任务管理器 → 详细信息 → PID"></label><p class="field-hint" id="native-hint">录制当前进程的 Frame、窗口和子控件。</p></div>
+            <details><summary>Toast 与认证设置 <span>⌄</span></summary><label class="field">Toast 观察窗口（毫秒）<input id="toast-window" type="number" min="500" max="30000" value="5000"></label><label class="field">额外的网页 Toast CSS<input id="toast-selector" placeholder="例如：.my-notification"></label><label class="field">原生 Toast 类名片段<input id="toast-classes" placeholder="toast,notification,snackbar"></label><label class="field">HTTP 认证用户名<input id="auth-user" autocomplete="off" placeholder="浏览器原生登录弹窗"></label><label class="field">HTTP 认证密码<input id="auth-password" type="password" autocomplete="new-password" placeholder="仅内存使用，不写入录制文件"></label><button type="button" class="secondary full" id="apply-auth" disabled>应用认证并重新打开页面</button></details>
+            <button class="primary full" id="start-button"><span>●</span> 开始录制</button>
+            <p class="field-hint">点击后打开独立浏览器；在目标窗口操作，回到这里停止录制。</p>
+          </form>
+          <div class="rules"><span>⌘</span><div><strong>定位规则已锁定</strong><p>CSS / Class · 至少 3 层 · 不使用文本定位</p></div><span class="checkmark">✓</span></div>
+        </section>
+        <section class="panel recording">
+          <div class="panel-title"><div class="live-title"><h2 id="recording-title">录制预览</h2><span id="state-badge" class="badge">就绪</span></div><div class="actions"><button id="stop-button" class="stop" disabled>■ 停止</button><button id="export-button" class="secondary" disabled>↓ 导出代码</button></div></div>
+          <div class="metrics"><div><strong id="action-count">0</strong><span>操作事件</span></div><div><strong id="component-count">0</strong><span>复用组件</span></div><div><strong id="toast-count">0</strong><span>Toast 断言</span></div><div><strong id="page-count">0</strong><span>录制页面</span></div></div>
+          <div class="tabs" role="tablist"><button class="active" data-tab="timeline" role="tab">操作时间线</button><button data-tab="code" role="tab">生成的代码</button><button data-tab="components" role="tab">组件定位库</button><label class="raw-toggle"><input id="show-raw" type="checkbox"> 原始键鼠事件</label></div>
+          <div id="warnings" class="warnings" hidden></div>
+          <div id="timeline" class="tab-content"><div class="empty-state"><div class="empty-icon">⌘<span>↗</span></div><h3>让每一次操作都有迹可循</h3><p>输入目标地址并开始录制。<br>点击、输入、滚动与 Toast 会实时出现在这里。</p><div class="empty-tags"><span>鼠标与键盘</span><span>iframe</span><span>自动断言</span></div></div></div>
+          <pre id="code" class="tab-content code" hidden><code># 开始录制后，在这里查看生成的 Python 代码。</code></pre>
+          <div id="components" class="tab-content component-list" hidden></div>
+          <div class="recording-footer"><span class="green-dot"></span><span id="footer-status">准备好开始你的第一次录制</span><span>PYTHON + PLAYWRIGHT</span></div>
+        </section>
+      </div>
+      <div class="tips"><span>↳</span><p><strong>一次定义，后续复用。</strong> 相同结构的组件共用定位；Toast 自动封装为断言。原生 Windows 使用 UI Automation 类路径回放。</p></div>
+    </div>
+  </main>
+  <div id="notice" role="status" hidden></div>
+  <script src="/static/app.js"></script>
+</body></html>
