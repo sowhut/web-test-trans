@@ -17,7 +17,12 @@ jobs:
         with:
           version: "0.9.5"
       - run: uv sync --frozen --extra test --python ${{ matrix.python }}
-      - run: uv run playwright install --with-deps chromium
+      - name: Install Chromium and Linux system libraries
+        if: runner.os == 'Linux'
+        run: uv run playwright install --with-deps chromium
+      - name: Install Chromium on Windows
+        if: runner.os == 'Windows'
+        run: uv run playwright install chromium
       - run: uv run pytest -q
   windows-core:
     name: windows-core (Python ${{ matrix.python }})
