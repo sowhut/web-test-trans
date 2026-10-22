@@ -7,6 +7,12 @@ import time
 
 from .windows_runtime import class_path
 from .toast_listener import ToastListenerProcess
+from .compat import run_in_thread
+
+
+def _control_kind(control):
+    name = control.ControlTypeName
+    return (name[:-len('Control')] if name.endswith('Control') else name).lower()
 
 
 class WindowsRecorder:
@@ -29,7 +35,7 @@ class WindowsRecorder:
         self.auto = auto
         self.thread = threading.Thread(target=self._worker, daemon=True)
         self.thread.start()
-        if not await asyncio.to_thread(self.ready.wait, 10):
+        if not await run_in_thread(self.ready.wait, 10):
             self.closed.set()
             raise TimeoutError('Windows UI Automation 初始化超时')
         if self.error:
@@ -52,7 +58,7 @@ class WindowsRecorder:
                     if cached_focus.get('identity') != identity:
                         cached_focus.update(identity=identity,
                             locator={'backend':'windows','path':class_path(focused,self.session['process_id'])},
-                            control_kind=focused.ControlTypeName.removesuffix('Control').lower())
+                            control_kind=_control_kind(focused))
                     sensitive = bool(focused.IsPassword)
                     if sensitive:
                         safe_key = str(key) if key in (keyboard.Key.tab,keyboard.Key.enter,keyboard.Key.esc) else None
@@ -78,7 +84,7 @@ class WindowsRecorder:
             listener.start()
 
     def _ref(self, control, kind=None):
-        return self.store.register(kind or control.ControlTypeName.removesuffix('Control').lower(),
+        return self.store.register(kind or _control_kind(control),
                                    {'backend':'windows','path':class_path(control,self.session['process_id'])})
 
     def _worker(self):
@@ -148,7 +154,7 @@ class WindowsRecorder:
             listener.stop()
         self.closed.set()
         if hasattr(self,'thread'):
-            await asyncio.to_thread(self.thread.join, 5)
+            await run_in_thread(self.thread.join, 5)
             if self.thread.is_alive():
                 raise RuntimeError('UIA 工作线程尚未退出，请关闭目标程序后重试停止')
         await self.toast_listener.stop()

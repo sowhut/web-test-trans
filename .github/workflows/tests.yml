@@ -4,21 +4,34 @@ permissions:
   contents: read
 jobs:
   browser:
-    runs-on: ubuntu-latest
+    name: browser (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+        python: ["3.8", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.9.5"
-      - run: uv sync --frozen --extra test --python 3.12
+      - run: uv sync --frozen --extra test --python ${{ matrix.python }}
       - run: uv run playwright install --with-deps chromium
       - run: uv run pytest -q
   windows-core:
+    name: windows-core (Python ${{ matrix.python }})
     runs-on: windows-latest
+    env:
+      WTT_REQUIRE_WINDOWS_DEPS: "1"
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.8", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.9.5"
-      - run: uv sync --frozen --extra test --extra windows --python 3.12
+      - run: uv sync --frozen --extra test --extra windows --python ${{ matrix.python }}
       - run: uv run pytest -q tests/test_core.py

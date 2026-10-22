@@ -10,6 +10,8 @@ import queue
 import time
 from contextlib import nullcontext
 
+from .compat import run_in_thread
+
 
 def _worker(inbox, outbox, ready, settings):
     actions, seen = {}, {}
@@ -78,7 +80,7 @@ class ToastListenerProcess:
         self.process=self.ctx.Process(target=_worker,args=(self.inbox,self.outbox,self.ready,settings),
                                      name='wtt-toast-listener',daemon=True)
         self.process.start()
-        if not await asyncio.to_thread(self.ready.wait,10):
+        if not await run_in_thread(self.ready.wait,10):
             self.process.terminate()
             raise TimeoutError('Toast 监听进程启动超时')
         self.session['toast_listener_pid']=self.process.pid
@@ -117,10 +119,10 @@ class ToastListenerProcess:
             return
         self.stopping=True
         self.inbox.put({'type':'shutdown'})
-        await asyncio.to_thread(self.process.join,5)
+        await run_in_thread(self.process.join,5)
         if self.process.is_alive():
             self.process.terminate()
-            await asyncio.to_thread(self.process.join,2)
+            await run_in_thread(self.process.join,2)
             self.store.warn(self.session,'Toast 监听进程未正常退出，末尾提示可能不完整')
         self.draining=False
         await self.drain_task

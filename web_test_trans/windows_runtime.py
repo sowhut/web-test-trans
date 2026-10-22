@@ -6,6 +6,7 @@ import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 
 def class_children(control, limit=2000):
@@ -136,7 +137,7 @@ class WindowsComponents:
 @dataclass(frozen=True)
 class NativeToastExpectation:
     component: str
-    text: str | None = None
+    text: Optional[str] = None
 
 
 class WindowsToastAssertions:

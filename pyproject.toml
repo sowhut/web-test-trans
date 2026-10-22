@@ -6,8 +6,17 @@ build-backend = "hatchling.build"
 name = "web-test-trans"
 version = "0.1.0"
 description = "Local web and Windows UI recorder with reusable CSS/class locators"
-requires-python = ">=3.10"
-dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1", "playwright>=1.51,<2", "PyYAML>=6,<7"]
+requires-python = ">=3.8"
+dependencies = [
+    "fastapi==0.124.4; python_version < '3.9'",
+    "fastapi>=0.115,<1; python_version >= '3.9'",
+    "uvicorn==0.33.0; python_version < '3.9'",
+    "uvicorn>=0.30,<1; python_version >= '3.9'",
+    "playwright==1.48.0; python_version < '3.9'",
+    "playwright>=1.51,<2; python_version >= '3.9'",
+    "pydantic>=2.10,<3",
+    "PyYAML>=6,<7",
+]
 
 [project.optional-dependencies]
 windows = ["uiautomation>=2.0.20; sys_platform == 'win32'", "pynput>=1.7.7; sys_platform == 'win32'"]
@@ -21,4 +30,5 @@ packages = ["web_test_trans"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]

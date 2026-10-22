@@ -2,7 +2,7 @@ import asyncio
 import platform
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Literal
+from typing import List, Literal
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, HTTPException, Request
@@ -26,7 +26,7 @@ class StartRequest(BaseModel):
     process_id: int = Field(default=0, ge=0)
     toast_window_ms: int = Field(default=5000, ge=500, le=30000)
     toast_selector: str = Field(default='', max_length=1000)
-    toast_classes: list[str] = Field(default_factory=list, max_length=30)
+    toast_classes: List[str] = Field(default_factory=list, max_length=30)
     username: str = ''
     password: SecretStr = SecretStr('')
 
@@ -39,10 +39,14 @@ class AuthRequest(BaseModel):
 def create_app(data_dir='data'):
     store = Store(data_dir)
     state = {'recorder':None}
-    transition = asyncio.Lock()
+    transition = None
 
     @asynccontextmanager
     async def lifespan(app):
+        # Python 3.8 binds a Lock to its loop at construction. Create it only
+        # once the server loop is running, not while importing/building the app.
+        nonlocal transition
+        transition = asyncio.Lock()
         yield
         if state['recorder']:
             await state['recorder'].stop()

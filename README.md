@@ -4,7 +4,7 @@ Python 本地自动化录制台。浏览器录制导出可独立运行的 Playwr
 
 ## 快速开始
 
-需要 Python 3.10+（推荐 3.12）。
+支持 Python 3.8+，录制服务和导出的独立回放项目都兼容 3.8。CI 同时验证 Python 3.8 与 3.12。
 
 ```bash
 git clone https://github.com/sowhut/web-test-trans.git
@@ -27,9 +27,20 @@ python -m pip install -e ".[windows]"
 python -m web_test_trans
 ```
 
+如果 Windows 同时装有多个 Python，可明确使用 3.8 创建环境：
+
+```powershell
+py -3.8 -m venv .venv
+.venv\Scripts\python.exe -m pip install -e ".[windows]"
+.venv\Scripts\python.exe -m playwright install chromium
+.venv\Scripts\python.exe -m web_test_trans
+```
+
+Python 3.8 的关键依赖为 Playwright 1.48.0、FastAPI 0.124.4、Uvicorn 0.33.0、Pydantic 2.10.6。安装器按 Python 版本自动选择；3.9+ 保留较新依赖范围，`uv.lock` 锁定各版本组合。Playwright 1.49 起停止支持 Python 3.8，所以 3.8 使用 1.48 对应的浏览器。现有录制、组件、Toast、认证及 Windows 后端接口均保留，不要求较新 Python 一起降级。[Playwright 官方版本说明](https://playwright.dev/python/docs/release-notes#version-149)
+
 先打开目标桌面程序，从任务管理器「详细信息」取得 PID，选择「Windows 原生」并填写 PID。录制仅收集该进程的控件操作。原生窗口没有 CSS DOM，使用 UIA `ClassName` 路径，不能交给 Playwright 操作。
 
-使用 uv 可复现安装：`uv sync --extra test`，Windows 加 `--extra windows`；`uv run playwright install chromium`；`uv run web-test-trans`。`uv.lock` 已锁定依赖。
+使用 uv 可复现安装：`uv sync --frozen --extra test --python 3.8`，Windows 加 `--extra windows`；`uv run playwright install chromium`；`uv run web-test-trans`。需要较新 Python 时将 `3.8` 换成 `3.12`。`uv.lock` 已锁定依赖。
 
 ## 严格的定位约束
 
@@ -151,7 +162,7 @@ python -m playwright install chromium
 python -m pytest -q
 ```
 
-测试覆盖真实 Chromium 的录制→导出→回放、键鼠、iframe、多个同类 toast、短时 toast、密码脱敏、HTTP 认证、独立监听进程及原生类路径解析。GitHub Actions 运行 Linux 浏览器测试和 Windows 核心逻辑测试。
+测试覆盖真实 Chromium 的录制→导出→回放、键鼠、iframe、多个同类 toast、短时 toast、密码脱敏、HTTP 认证、独立监听进程及原生类路径解析。GitHub Actions 在 Linux/Windows、Python 3.8/3.12 上运行浏览器测试，并对 Windows 可选依赖及核心逻辑进行检查。可通过 `WTT_REPLAY_PYTHON` 指定另一独立环境的 Python 路径，验证导出项目跨 Python 版本回放。
 
 **Windows 原生实际录制尚需在 Windows 交互式桌面验收。** 当前开发环境是 macOS，不能将模拟 UIA 树测试当作 Windows 真机验收。Windows 验收步骤见 [docs/windows-validation.md](docs/windows-validation.md)。
 

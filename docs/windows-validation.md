@@ -2,7 +2,7 @@
 
 状态：已实现后端并验证类路径算法；尚未完成 Windows 真机录制验收。
 
-环境：Windows 10/11 交互式桌面，Python 3.10+，目标程序已经启动且提供 UI Automation Provider。工具与目标进程需要能够互相访问 UIA；不要在 UAC 安全桌面录制。
+环境：Windows 10/11 交互式桌面，Python 3.8+，目标程序已经启动且提供 UI Automation Provider。工具与目标进程需要能够互相访问 UIA；不要在 UAC 安全桌面录制。多版本并存时使用 `py -3.8 -m venv .venv` 明确选择 Python 3.8。
 
 1. 安装 `python -m pip install -e ".[windows,test]"`，运行 `python -m web_test_trans`。
 2. 开始前先运行 `python -m uiautomation`（或使用 Windows Accessibility Insights）检查目标控件树。要求至少三个真实、可唯一识别的 ClassName 层级。

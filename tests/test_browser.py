@@ -10,6 +10,9 @@ from web_test_trans.exporter import export_bundle
 from web_test_trans.store import Store, validate_locator
 from web_test_trans.web_recorder import WebRecorder
 
+# May point to a clean replay-only venv to check exports on a different Python.
+REPLAY_PYTHON = os.getenv('WTT_REPLAY_PYTHON',sys.executable)
+
 
 async def recorder_for(tmp_path, url, credentials=None):
     store=Store(tmp_path / 'data')
@@ -56,7 +59,7 @@ async def test_record_export_replay_keys_mouse_frame_toasts_secret(tmp_path,site
     with zipfile.ZipFile(BytesIO(export_bundle(session,store.components))) as archive: archive.extractall(target)
     env={**os.environ,'WTT_HEADLESS':'1'}
     env.update({e['secret_env']:'replacement-secret' for e in session['events'] if e.get('secret_env')})
-    proc=await asyncio.create_subprocess_exec(sys.executable,str(target/'test_recording.py'),env=env,
+    proc=await asyncio.create_subprocess_exec(REPLAY_PYTHON,str(target/'test_recording.py'),env=env,
                                               stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
     stdout,stderr=await asyncio.wait_for(proc.communicate(),60)
     assert proc.returncode==0, (stdout+stderr).decode()
@@ -96,7 +99,7 @@ async def test_http_auth_detection_and_credentials(tmp_path,site):
     config=yaml.safe_load((target/'config.yml').read_text())
     assert config['browser']['http_credentials']['username']=='${WTT_HTTP_USERNAME}'
     env={**os.environ,'WTT_HEADLESS':'1','WTT_HTTP_USERNAME':'user','WTT_HTTP_PASSWORD':'secret'}
-    proc=await asyncio.create_subprocess_exec(sys.executable,str(target/'test_recording.py'),env=env,
+    proc=await asyncio.create_subprocess_exec(REPLAY_PYTHON,str(target/'test_recording.py'),env=env,
                                               stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
     stdout,stderr=await asyncio.wait_for(proc.communicate(),40)
     assert proc.returncode==0,(stdout+stderr).decode()
@@ -136,7 +139,7 @@ async def test_popup_export_replays_without_ordinal_page_selection(tmp_path,site
         await recorder.stop()
     target=tmp_path/'popup-export';target.mkdir()
     with zipfile.ZipFile(BytesIO(export_bundle(session,store.components))) as archive: archive.extractall(target)
-    proc=await asyncio.create_subprocess_exec(sys.executable,str(target/'test_recording.py'),env={**os.environ,'WTT_HEADLESS':'1'},
+    proc=await asyncio.create_subprocess_exec(REPLAY_PYTHON,str(target/'test_recording.py'),env={**os.environ,'WTT_HEADLESS':'1'},
                                               stdout=asyncio.subprocess.PIPE,stderr=asyncio.subprocess.PIPE)
     stdout,stderr=await asyncio.wait_for(proc.communicate(),40)
     assert proc.returncode==0,(stdout+stderr).decode()

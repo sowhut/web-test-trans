@@ -150,7 +150,10 @@ def export_bundle(session, registry):
         archive.write(Path(__file__).with_name('configuration.py'),'configuration.py')
         runtime = 'runtime.py' if session['backend'] == 'web' else 'windows_runtime.py'
         archive.write(Path(__file__).with_name(runtime), runtime)
-        requirements = ('playwright>=1.51,<2\n' if session['backend'] == 'web' else 'uiautomation>=2.0.20\npynput>=1.7.7\n') + 'PyYAML>=6,<7\n'
+        # Keep both markers so an export created on 3.12 can be installed on 3.8.
+        requirements = ("playwright==1.48.0; python_version < '3.9'\n"
+                        "playwright>=1.51,<2; python_version >= '3.9'\n"
+                        if session['backend'] == 'web' else 'uiautomation>=2.0.20\npynput>=1.7.7\n') + 'PyYAML>=6,<7\n'
         archive.writestr('requirements.txt', requirements)
         secrets = sorted({e['secret_env'] for e in session['events'] if e.get('secret_env')})
         if make_config(session).get('browser',{}).get('http_credentials'):
@@ -158,7 +161,8 @@ def export_bundle(session, registry):
         if session['backend'] == 'windows':
             secrets += ['WTT_PROCESS_ID']
         archive.writestr('.env.example', '\n'.join(f'{key}=' for key in secrets) + '\n')
-        archive.writestr('README.txt', '安装：python -m pip install -r requirements.txt\n网页需运行：python -m playwright install chromium\n'
+        archive.writestr('README.txt', '支持 Python 3.8+。安装：python -m pip install -r requirements.txt\n网页需运行：python -m playwright install chromium\n'
+                          'Python 3.8 自动安装 Playwright 1.48.0；其他 Python 版本按 requirements.txt 选择兼容版本。\n'
                           'config.yml 保存参数，可直接修改；推荐设置 .env.example 所列的环境变量（不会自动加载 .env），运行 python test_recording.py。\n'
                           'Windows 原生回放必须在 Windows 交互式桌面运行并先启动目标程序。\n'
                           '组件可通过 components.get(key) 复用；toast 文案仅用于断言，不用于定位。\n'

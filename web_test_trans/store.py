@@ -72,8 +72,8 @@ class Store:
     def list(self):
         with self.lock:
             values = [self._read(p, {}) for p in self.root.glob("session_*.json")]
-        return sorted([{k: v for k, v in s.items() if k != "events"} |
-                       {"event_count": len(s["events"])} for s in values],
+        return sorted([{**{k: v for k, v in s.items() if k != "events"},
+                        "event_count": len(s["events"])} for s in values],
                       key=lambda s: s["created_at"], reverse=True)
 
     def register(self, kind, locator):

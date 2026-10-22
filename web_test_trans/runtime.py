@@ -7,6 +7,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 
 class Component:
@@ -96,7 +97,7 @@ class ComponentLibrary:
 @dataclass(frozen=True)
 class ToastExpectation:
     component: str
-    text: str | None = None
+    text: Optional[str] = None
 
 
 _ARM = r"""({id, selectors}) => {
